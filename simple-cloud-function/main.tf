@@ -5,12 +5,14 @@ provider "google" {
   region  = "us-central1"
 }
 
-data "archive_file" "source" {
-  type       = "zip"
-  source_dir = "${path.module}/src"
+locals {
+  fmt_timestamp = formatdate("YYYYMMDDhhmmss", timestamp())
+}
 
-  # TODO: Aviod filename conflicts here.
-  output_path = "${path.module}/generated/source.zip"
+data "archive_file" "source" {
+  type        = "zip"
+  source_dir  = "${path.module}/src"
+  output_path = "${path.module}/generated/source-${local.fmt_timestamp}.zip"
 }
 
 resource "google_storage_bucket" "source" {
@@ -19,7 +21,7 @@ resource "google_storage_bucket" "source" {
 }
 
 resource "google_storage_bucket_object" "source" {
-  name   = "my_second_fn_source"
+  name   = "my_second_fn_source-${data.archive_file.source.output_sha}"
   bucket = google_storage_bucket.source.name
   source = data.archive_file.source.output_path
 }
